@@ -1,4 +1,4 @@
-# 🔄 Server Cloner
+# Server Cloner
 
 A powerful Vencord plugin that allows you to clone Discord servers with all their channels, roles, permissions, and community features.
 
@@ -8,7 +8,7 @@ A powerful Vencord plugin that allows you to clone Discord servers with all thei
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Description |
 |---------|-------------|
@@ -20,7 +20,7 @@ A powerful Vencord plugin that allows you to clone Discord servers with all thei
 |  **Update Checker** | Automatic update notifications when new versions are available |
 
 ---
-### ✅ Included
+### Included
 - Server name and icon
 - All roles with permissions
 - All channel categories
@@ -31,7 +31,7 @@ A powerful Vencord plugin that allows you to clone Discord servers with all thei
 - Community features (rules channel, updates channel)
 - Server description
 
-### ❌ Not Included
+### Not Included
 - Messages and message history
 - Members and their roles
 - Emojis
@@ -42,13 +42,13 @@ A powerful Vencord plugin that allows you to clone Discord servers with all thei
 
 ---
 
-## ⚠️ Important Notes
+## Important Notes
 
 1. **Rate limits** may slow down the process for large servers
 
 ---
 
-##  Update System
+## Update System
 
 The plugin automatically checks for updates on startup. When a new version is available:
 
@@ -60,13 +60,14 @@ You can also manually check for updates in the plugin settings.
 
 ---
 
-##  Author
+## Author
 
 **Moret**
 - GitHub: [@BlockTol](https://github.com/BlockTol)
 ---
 
-##  License
+## License
 
 This project is licensed under the **GPL-3.0 License** - see the [LICENSE](LICENSE) file for details.
+
 
