@@ -68,7 +68,8 @@ You can also manually check for updates in the plugin settings.
 
 ## License
 
-This project is licensed under the **GPL-3.0 License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **GPL-3.0 License**
+
 
 
 
