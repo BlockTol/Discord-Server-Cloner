@@ -63,9 +63,10 @@ You can also manually check for updates in the plugin settings.
 
 ## Author
 
-- GitHub: [@BlockTol](https://github.com/BlockTol)
-- [Discord](https://discord.gg/VyQQKxhuTC)
+- Created by BlockTool
+- [Discord server](https://discord.gg/VyQQKxhuTC)
 ---
+
 
 
 
