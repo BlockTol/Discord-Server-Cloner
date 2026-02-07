@@ -5,7 +5,7 @@ A powerful Vencord plugin that allows you to clone Discord servers with all thei
 ![Version](https://img.shields.io/badge/version-1.0.0-5865F2?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-GPL--3.0-43b581?style=for-the-badge)
 ![Downloads](https://img.shields.io/github/downloads/BlockTol/discord-Server-Cloner/total?style=for-the-badge&color=orange)
-[![Discord](https://img.shields.io/badge/Discord-Join_Server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](discord.com/invite/9ra6MwHTHy)
+[![Discord](https://img.shields.io/badge/Discord-Join_Server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/9ra6MwHTHy)
 
 ---
 
@@ -66,6 +66,7 @@ You can also manually check for updates in the plugin settings.
 - Created by **BlockTool**
 - [Discord Server](https://discord.gg/VyQQKxhuTC)
 ---
+
 
 
 
