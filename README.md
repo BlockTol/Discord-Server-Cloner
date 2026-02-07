@@ -64,8 +64,9 @@ You can also manually check for updates in the plugin settings.
 ## Author
 
 - Created by BlockTool
-- [Discord server](https://discord.gg/VyQQKxhuTC)
+- [Discord Server](https://discord.gg/VyQQKxhuTC)
 ---
+
 
 
 
