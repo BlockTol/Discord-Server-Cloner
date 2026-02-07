@@ -62,12 +62,13 @@ You can also manually check for updates in the plugin settings.
 
 ## Author
 
-**Moret**
 - GitHub: [@BlockTol](https://github.com/BlockTol)
+- [Discord](https://discord.gg/VyQQKxhuTC)
 ---
 
 ## License
 
 This project is licensed under the **GPL-3.0 License** - see the [LICENSE](LICENSE) file for details.
+
 
 
