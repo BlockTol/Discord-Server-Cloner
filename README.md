@@ -1,15 +1,14 @@
-# 🔄 Server Cloner
+# Server Cloner
 
 A powerful Vencord plugin that allows you to clone Discord servers with all their channels, roles, permissions, and community features.
 
-![Version](https://img.shields.io/badge/version-1.0.0-5865F2?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-2.0.1-5865F2?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-GPL--3.0-43b581?style=for-the-badge)
-![Downloads](https://img.shields.io/github/downloads/BlockTol/discord-Server-Cloner/total?style=for-the-badge&color=orange)
 [![Discord](https://img.shields.io/badge/Discord-Join_Server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/VyQQKxhuTC)
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Description |
 |---------|-------------|
@@ -21,7 +20,7 @@ A powerful Vencord plugin that allows you to clone Discord servers with all thei
 |  **Update Checker** | Automatic update notifications when new versions are available |
 
 ---
-### ✅ Included
+### Included
 - Server name, icon, banner, and splash
 - All roles with colors, icons, and permissions
 - All channel categories
@@ -36,7 +35,7 @@ A powerful Vencord plugin that allows you to clone Discord servers with all thei
 - **Smart Emoji Extractor**: Automatically detects, downloads, and maps any custom emojis used in the Server Description, Roles, Channels, and Onboarding settings.
 - Clone to existing server (with overwrite confirmation, or "Resume" mode)
 
-### ❌ Not Included
+### Not Included
 - Messages and message history
 - Members and their individual assigned roles
 - Threads
@@ -48,7 +47,7 @@ A powerful Vencord plugin that allows you to clone Discord servers with all thei
 
 ---
 
-## ⚠️ Important Notes
+## Important Notes
 
 1. **Rate limits** may slow down the process for large servers
 
@@ -68,11 +67,10 @@ You can also manually check for updates in the plugin settings.
 
 ##  Author
 
-**Moret**
+**Block**
 - GitHub: [@BlockTol](https://github.com/BlockTol)
 ---
 
 ##  License
 
 This project is licensed under the **GPL-3.0 License** - see the [LICENSE](LICENSE) file for details.
-
