@@ -89,10 +89,13 @@ export function translateError(error: any): string {
 }
 
 export function handleCloneError(context: string, error: any, itemName?: string): void {
-    if (!state.isCloning && state.abortController?.signal.aborted) return;
+    if (!state.isCloning || state.abortController?.signal.aborted) return;
 
     const translated = translateError(error);
     if (!translated) return;
+
+    const errorMsg = itemName ? `[${context}] ${itemName}: ${translated}` : `[${context}]: ${translated}`;
+    state.cloneErrors.push(errorMsg);
 
     if (isFatalError(error)) {
         state.isCloning = false;

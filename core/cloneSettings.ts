@@ -1,13 +1,12 @@
 import { RestAPI } from "@webpack/common";
 import { updateWithTime } from "../utils/notifications";
-import { handleCloneError } from "../utils/errorHandler";
-import { sleep } from "../utils/helpers";
 import { throwIfCancelled } from "../store";
+import { handleCloneError } from "../utils/errorHandler";
 import { CloneContext } from "./types";
 
 export async function cloneSettings(ctx: CloneContext) {
     const { fullGuildData, newGuildId, channelIdMap, taskQueue, settingsProgressEnd, estimateChannels } = ctx;
-    
+
     try {
         const settingsPayload: any = {};
 
@@ -30,8 +29,13 @@ export async function cloneSettings(ctx: CloneContext) {
         const isCommunity = fullGuildData.features?.includes("COMMUNITY") ||
             estimateChannels.some((c: any) => [5, 13, 15, 16].includes(c.type));
 
-        if (fullGuildData.features?.includes("COMMUNITY") || isCommunity) {
-            settingsPayload.features = fullGuildData.features || ["COMMUNITY"];
+        if (isCommunity) {
+            const SELF_APPLICABLE_FEATURES = new Set(["COMMUNITY", "INVITES_DISABLED"]);
+            settingsPayload.features = (fullGuildData.features || ["COMMUNITY"])
+                .filter((f: string) => SELF_APPLICABLE_FEATURES.has(f));
+            if (settingsPayload.features.length === 0) {
+                settingsPayload.features = ["COMMUNITY"];
+            }
         }
 
         if (Object.keys(settingsPayload).length > 0) {
@@ -55,11 +59,11 @@ export async function cloneSettings(ctx: CloneContext) {
             }
         }
 
-        // Sync channel positions
+
         const positionUpdates: any[] = [];
         const categories = estimateChannels.filter((c: any) => c.type === 4);
         const otherChannels = estimateChannels.filter((c: any) => c.type !== 4);
-        
+
         for (const cat of categories) {
             if (channelIdMap[cat.id]) {
                 positionUpdates.push({ id: channelIdMap[cat.id], position: typeof cat.position === 'number' ? cat.position : 0 });
@@ -74,14 +78,19 @@ export async function cloneSettings(ctx: CloneContext) {
         if (positionUpdates.length > 0) {
             updateWithTime("Syncing channel positions...", settingsProgressEnd - 2);
             const chunkSize = 50;
+            const positionPromises: Promise<any>[] = [];
             for (let i = 0; i < positionUpdates.length; i += chunkSize) {
-                await taskQueue.execute(async () => {
-                    await RestAPI.patch({
-                        url: `/guilds/${newGuildId}/channels`,
-                        body: positionUpdates.slice(i, i + chunkSize)
-                    });
-                });
+                const chunk = positionUpdates.slice(i, i + chunkSize);
+                positionPromises.push(
+                    taskQueue.execute(async () => {
+                        await RestAPI.patch({
+                            url: `/guilds/${newGuildId}/channels`,
+                            body: chunk
+                        });
+                    })
+                );
             }
+            await Promise.all(positionPromises);
         }
     } catch (e) {
         handleCloneError("Settings", e);

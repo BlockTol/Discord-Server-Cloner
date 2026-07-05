@@ -7,12 +7,5 @@ export const settings = definePluginSettings({
         type: OptionType.COMPONENT,
         description: "",
         component: VersionDisplay
-    },
-    concurrencyLimit: {
-        type: OptionType.SLIDER,
-        description: "Cloning Speed (Concurrent API requests) - Higher is faster but may trigger more temporary rate limits. Recommended: 3-6.",
-        default: 5,
-        markers: [1, 2, 4, 6, 8, 10, 12],
-        stickToMarkers: true
     }
 });

@@ -2,8 +2,8 @@ import { RestAPI } from "@webpack/common";
 import { replaceEmojis, sleep } from "../utils/helpers";
 import { checkGuildExistence } from "../utils/api";
 import { updateWithTime } from "../utils/notifications";
+import { throwIfCancelled, state } from "../store";
 import { handleCloneError } from "../utils/errorHandler";
-import { state, throwIfCancelled } from "../store";
 import { CloneContext } from "./types";
 
 export async function cloneChannels(ctx: CloneContext): Promise<number> {
@@ -44,10 +44,10 @@ export async function cloneChannels(ctx: CloneContext): Promise<number> {
     let catStored = 0;
     const catPromises = categoriesToCreate.map(async (cat: any) => {
         if (!state.isCloning) return;
-        
+
         try {
             checkGuildExistence(sourceGuild.id, newGuildId);
-            
+
             const catPayload: any = {
                 name: cat.name,
                 type: 4,
@@ -56,10 +56,11 @@ export async function cloneChannels(ctx: CloneContext): Promise<number> {
             };
 
             if (cat.permission_overwrites) {
+
                 const mappedOverwrites = cat.permission_overwrites
-                    .filter((ow: any) => ow.type === 0 && roleIdMap[ow.id])
+                    .filter((ow: any) => ow.type === 0 && (roleIdMap[ow.id] || ow.id === sourceGuild.id))
                     .map((ow: any) => ({
-                        id: roleIdMap[ow.id],
+                        id: ow.id === sourceGuild.id ? newGuildId : roleIdMap[ow.id],
                         type: 0,
                         allow: ow.allow,
                         deny: ow.deny
@@ -74,7 +75,7 @@ export async function cloneChannels(ctx: CloneContext): Promise<number> {
             if (response?.body?.id) {
                 channelIdMap[cat.id] = response.body.id;
             }
-            
+
             catStored++;
             const progress = channelsProgressStart + ((catStored / Math.max(categoriesToCreate.length, 1)) * ((channelsProgressEnd - channelsProgressStart) * 0.2));
             updateWithTime(`${actionLabel} category ${catStored}/${categoriesToCreate.length}: ${cat.name}`, progress);
@@ -91,7 +92,7 @@ export async function cloneChannels(ctx: CloneContext): Promise<number> {
 
     if (isCommunity && !options.resumeMode) {
         updateWithTime("Enabling Community features...", channelsProgressStart + ((channelsProgressEnd - channelsProgressStart) * 0.25));
-        
+
         try {
             let rulesChannelNewId: string | null = null;
             let updatesChannelNewId: string | null = null;
@@ -206,7 +207,7 @@ export async function cloneChannels(ctx: CloneContext): Promise<number> {
 
         try {
             checkGuildExistence(sourceGuild.id, newGuildId);
-            
+
             const chPayload: any = {
                 name: replaceEmojis(ch.name),
                 type: ch.type,
@@ -222,7 +223,10 @@ export async function cloneChannels(ctx: CloneContext): Promise<number> {
             }
 
             if (ch.type === 2 || ch.type === 13) {
-                chPayload.bitrate = Math.min(ch.bitrate || 64000, 96000);
+                const targetGuildForBitrate = GuildStore.getGuild(newGuildId);
+                const targetTier = (targetGuildForBitrate as any)?.premiumTier || 0;
+                const maxBitrate = targetTier >= 3 ? 384000 : targetTier >= 2 ? 256000 : targetTier >= 1 ? 128000 : 96000;
+                chPayload.bitrate = Math.min(ch.bitrate || 64000, maxBitrate);
                 chPayload.user_limit = ch.user_limit || 0;
             }
 
@@ -253,10 +257,11 @@ export async function cloneChannels(ctx: CloneContext): Promise<number> {
             }
 
             if (ch.permission_overwrites) {
+
                 const mappedOverwrites = ch.permission_overwrites
-                    .filter((ow: any) => ow.type === 0 && roleIdMap[ow.id])
+                    .filter((ow: any) => ow.type === 0 && (roleIdMap[ow.id] || ow.id === sourceGuild.id))
                     .map((ow: any) => ({
-                        id: roleIdMap[ow.id],
+                        id: ow.id === sourceGuild.id ? newGuildId : roleIdMap[ow.id],
                         type: 0,
                         allow: ow.allow,
                         deny: ow.deny

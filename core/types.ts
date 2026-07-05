@@ -18,4 +18,8 @@ export interface CloneContext {
     channelsProgressEnd: number;
     settingsProgressEnd: number;
     onboardingProgressStart: number;
+    stickersProgressStart: number;
+    stickersProgressEnd: number;
+    soundboardProgressStart: number;
+    soundboardProgressEnd: number;
 }

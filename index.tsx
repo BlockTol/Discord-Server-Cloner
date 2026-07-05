@@ -15,6 +15,8 @@ import { cloneServer } from "./core/clone";
 import { state } from "./store";
 import { cleanupContainer } from "./utils/notifications";
 import { compareVersions } from "./utils/helpers";
+import { registerDevTools, unregisterDevTools } from "./devTools";
+
 
 async function checkForUpdates(): Promise<void> {
     if (!UPDATE_CHECK_ENABLED) return;
@@ -81,16 +83,22 @@ const guildContextMenuPatch: NavContextMenuPatchCallback = (children: any[], pro
 export default definePlugin({
     name: "ServerCloner",
     description: "Clone servers with channels, roles, permissions and community features",
-    authors: [{ name: "Moret", id: 1449096170646536233n }],
+    authors: [{ name: "Block", id: 1449096170646536233n }],
     tags: ["Utility", "Customisation"],
     settings,
 
     start() {
+        state.settings = settings;
         setTimeout(() => checkForUpdates(), 5000);
+        registerDevTools();
     },
 
+
+
     stop() {
+        unregisterDevTools();
         cleanupContainer();
+
         if (state.abortController) {
             state.abortController.abort();
             state.abortController = null;

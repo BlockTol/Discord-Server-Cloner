@@ -6,6 +6,8 @@ export interface CloneOptions {
     resumeMode: boolean;
     targetGuildId: string | null;
     cloneEmojis?: boolean;
+    cloneStickers?: boolean;
+    cloneSoundboard?: boolean;
 }
 
 export interface NotificationAction {
