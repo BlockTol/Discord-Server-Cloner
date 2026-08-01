@@ -1,4 +1,4 @@
-import { Guild } from "@vencord/discord-types";
+﻿import { Guild } from "@vencord/discord-types";
 import { CloneOptions } from "../types";
 import { TaskQueue } from "../utils/TaskQueue";
 
@@ -10,6 +10,10 @@ export interface CloneContext {
     roleIdMap: Record<string, string>;
     channelIdMap: Record<string, string>;
     taskQueue: TaskQueue;
+    roleQueue: TaskQueue;
+    channelQueue: TaskQueue;
+    deleteQueue: TaskQueue;
+    assetQueue: TaskQueue;
     estimateChannels: any[];
     estimateRoles: any[];
     rolesProgressStart: number;

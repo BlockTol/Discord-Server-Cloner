@@ -1,4 +1,4 @@
-import { RestAPI } from "@webpack/common";
+import { RestAPI, GuildStore } from "@webpack/common";
 import { replaceEmojis, arrayBufferToBase64, sleep } from "../utils/helpers";
 import { checkGuildExistence, fetchGuildRoles } from "../utils/api";
 import { updateWithTime } from "../utils/notifications";
@@ -7,7 +7,7 @@ import { handleCloneError } from "../utils/errorHandler";
 import { CloneContext } from "./types";
 
 export async function extractAndCloneEmojis(ctx: CloneContext) {
-    const { sourceGuild, fullGuildData, options, estimateRoles, estimateChannels, newGuildId, taskQueue } = ctx;
+    const { sourceGuild, fullGuildData, options, estimateRoles, estimateChannels, newGuildId, taskQueue, assetQueue } = ctx;
     const customEmojiIds = new Set<string>();
 
     const addEmojisFromText = (text: string | null | undefined) => {
@@ -101,7 +101,7 @@ export async function extractAndCloneEmojis(ctx: CloneContext) {
                         const base64 = arrayBufferToBase64(buffer);
                         const imageStr = `data:image/${ext};base64,${base64}`;
 
-                        await taskQueue.execute(async () => {
+                        await assetQueue.execute(async () => {
                             const createResp = await RestAPI.post({
                                 url: `/guilds/${newGuildId}/emojis`,
                                 body: {
@@ -132,7 +132,7 @@ export async function extractAndCloneEmojis(ctx: CloneContext) {
 
 export async function cloneRoles(ctx: CloneContext): Promise<number> {
     let rolesFailed = 0;
-    const { sourceGuild, newGuildId, options, estimateRoles, rolesProgressStart, rolesProgressEnd, taskQueue, roleIdMap } = ctx;
+    const { sourceGuild, newGuildId, options, estimateRoles, rolesProgressStart, rolesProgressEnd, taskQueue, roleQueue, roleIdMap } = ctx;
 
     let skipRoles = false;
     if (state.mainProgressNotificationId) {
@@ -224,7 +224,7 @@ export async function cloneRoles(ctx: CloneContext): Promise<number> {
                 }
             }
 
-            const response = await taskQueue.execute(async () => {
+            const response = await roleQueue.execute(async () => {
                 try {
                     return await RestAPI.post({ url: `/guilds/${newGuildId}/roles`, body: rolePayload });
                 } catch (e: any) {
@@ -268,7 +268,7 @@ export async function cloneRoles(ctx: CloneContext): Promise<number> {
         .map(r => ({ id: roleIdMap[r.id], position: r.position }));
     if (positionUpdates.length > 0) {
         try {
-            await taskQueue.execute(async () => {
+            await roleQueue.execute(async () => {
                 await RestAPI.patch({ url: `/guilds/${newGuildId}/roles`, body: positionUpdates });
             });
         } catch (e) {

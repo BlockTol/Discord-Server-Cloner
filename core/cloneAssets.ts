@@ -1,9 +1,12 @@
 import { RestAPI, GuildStore } from "@webpack/common";
+import { findByPropsLazy } from "@webpack";
 import { arrayBufferToBase64 } from "../utils/helpers";
 import { updateWithTime, notify } from "../utils/notifications";
 import { handleCloneError } from "../utils/errorHandler";
 import { state, throwIfCancelled } from "../store";
 import { CloneContext } from "./types";
+
+const AuthStore = findByPropsLazy("getToken");
 
 
 
@@ -18,7 +21,7 @@ function getTargetTier(guildId: string): number {
 
 
 export async function cloneStickers(ctx: CloneContext): Promise<number> {
-    const { sourceGuild, newGuildId, options, taskQueue, stickersProgressStart, stickersProgressEnd } = ctx;
+    const { sourceGuild, newGuildId, options, taskQueue, assetQueue, stickersProgressStart, stickersProgressEnd } = ctx;
     let clonedCount = 0;
 
     try {
@@ -91,13 +94,11 @@ export async function cloneStickers(ctx: CloneContext): Promise<number> {
         throwIfCancelled();
 
         let step = 0;
-        for (const sticker of stickersToClone) {
-            if (!state.isCloning) break;
+        const stickerPromises = stickersToClone.map(async (sticker: any) => {
+            if (!state.isCloning) return;
             throwIfCancelled();
 
             try {
-
-
                 const formatExt: Record<number, string> = { 1: "png", 2: "png", 3: "json", 4: "gif" };
                 const ext = formatExt[sticker.format_type] || "png";
                 const stickerUrl = `https://media.discordapp.net/stickers/${sticker.id}.${ext}`;
@@ -105,7 +106,7 @@ export async function cloneStickers(ctx: CloneContext): Promise<number> {
                 const response = await fetch(stickerUrl);
                 if (!response.ok) {
                     handleCloneError("Sticker", new Error(`CDN returned ${response.status}`), sticker.name);
-                    continue;
+                    return;
                 }
 
                 const blob = await response.blob();
@@ -119,15 +120,7 @@ export async function cloneStickers(ctx: CloneContext): Promise<number> {
                 formData.append("tags", sticker.tags || "");
                 formData.append("file", file);
 
-                await taskQueue.execute(async () => {
-
-                    const token = (window as any).__SENTRY__?.hub?.getClient?.()?.getOptions?.()?.headers?.Authorization
-                        || document.body.getAttribute("data-token")
-                        || "";
-
-
-                    const { findByPropsLazy } = await import("@webpack");
-                    const AuthStore = findByPropsLazy("getToken");
+                await assetQueue.execute(async () => {
                     const authToken = AuthStore?.getToken?.();
                     if (!authToken) throw new Error("Could not get auth token for sticker upload");
 
@@ -141,16 +134,20 @@ export async function cloneStickers(ctx: CloneContext): Promise<number> {
                         const errBody = await resp.json().catch(() => ({}));
                         throw new Error(errBody.message || `Sticker upload failed: ${resp.status}`);
                     }
-                }, (msg) => updateWithTime(msg, stickersProgressStart + ((step / stickersToClone.length) * (stickersProgressEnd - stickersProgressStart))));
+                }, (msg) => {
+                    const cur = stickersToClone.indexOf(sticker);
+                    updateWithTime(msg, stickersProgressStart + ((cur / stickersToClone.length) * (stickersProgressEnd - stickersProgressStart)));
+                });
 
-                clonedCount++;
                 step++;
                 updateWithTime(`Cloned sticker ${step}/${stickersToClone.length}: ${sticker.name}`, stickersProgressStart + ((step / stickersToClone.length) * (stickersProgressEnd - stickersProgressStart)));
             } catch (e) {
                 handleCloneError("Sticker", e, sticker.name);
-                step++;
             }
-        }
+        });
+
+        await Promise.all(stickerPromises);
+        clonedCount = step;
     } catch (e) {
         handleCloneError("Stickers", e, "fetch");
     }
@@ -161,7 +158,7 @@ export async function cloneStickers(ctx: CloneContext): Promise<number> {
 
 
 export async function cloneSoundboard(ctx: CloneContext): Promise<number> {
-    const { sourceGuild, newGuildId, options, taskQueue, soundboardProgressStart, soundboardProgressEnd } = ctx;
+    const { sourceGuild, newGuildId, options, taskQueue, assetQueue, deleteQueue, soundboardProgressStart, soundboardProgressEnd } = ctx;
     let clonedCount = 0;
 
     try {
@@ -187,16 +184,16 @@ export async function cloneSoundboard(ctx: CloneContext): Promise<number> {
 
         if (!options.resumeMode && targetSounds.length > 0) {
             updateWithTime(`Deleting ${targetSounds.length} existing soundboard sounds...`, soundboardProgressStart);
-            for (const ts of targetSounds) {
-                if (!state.isCloning) break;
+            await Promise.all(targetSounds.map(async (ts: any) => {
+                if (!state.isCloning) return;
                 try {
-                    await taskQueue.execute(async () => {
+                    await deleteQueue.execute(async () => {
                         await RestAPI.del({ url: `/guilds/${newGuildId}/soundboard-sounds/${ts.sound_id}` });
                     });
                 } catch (e) {
                     console.warn(`[ServerCloner] Failed to delete target soundboard sound ${ts.name}:`, e);
                 }
-            }
+            }));
             targetSounds = [];
         }
 
@@ -234,8 +231,8 @@ export async function cloneSoundboard(ctx: CloneContext): Promise<number> {
         throwIfCancelled();
 
         let step = 0;
-        for (const sound of soundsToClone) {
-            if (!state.isCloning) break;
+        const soundPromises = soundsToClone.map(async (sound: any) => {
+            if (!state.isCloning) return;
             throwIfCancelled();
 
             try {
@@ -243,8 +240,7 @@ export async function cloneSoundboard(ctx: CloneContext): Promise<number> {
                 const response = await fetch(soundUrl);
                 if (!response.ok) {
                     handleCloneError("Soundboard", new Error(`CDN returned ${response.status}`), sound.name);
-                    step++;
-                    continue;
+                    return;
                 }
 
                 const buffer = await response.arrayBuffer();
@@ -257,26 +253,29 @@ export async function cloneSoundboard(ctx: CloneContext): Promise<number> {
                     volume: sound.volume ?? 1,
                 };
 
-
                 if (sound.emoji_name && !sound.emoji_id) {
                     body.emoji_name = sound.emoji_name;
                 }
 
-                await taskQueue.execute(async () => {
+                await assetQueue.execute(async () => {
                     await RestAPI.post({
                         url: `/guilds/${newGuildId}/soundboard-sounds`,
                         body
                     });
-                }, (msg) => updateWithTime(msg, soundboardProgressStart + ((step / soundsToClone.length) * (soundboardProgressEnd - soundboardProgressStart))));
+                }, (msg) => {
+                    const cur = soundsToClone.indexOf(sound);
+                    updateWithTime(msg, soundboardProgressStart + ((cur / soundsToClone.length) * (soundboardProgressEnd - soundboardProgressStart)));
+                });
 
-                clonedCount++;
                 step++;
                 updateWithTime(`Cloned sound ${step}/${soundsToClone.length}: ${sound.name}`, soundboardProgressStart + ((step / soundsToClone.length) * (soundboardProgressEnd - soundboardProgressStart)));
             } catch (e) {
                 handleCloneError("Soundboard", e, sound.name);
-                step++;
             }
-        }
+        });
+
+        await Promise.all(soundPromises);
+        clonedCount = step;
     } catch (e) {
         handleCloneError("Soundboard", e, "fetch");
     }

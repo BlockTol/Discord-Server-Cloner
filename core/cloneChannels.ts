@@ -1,4 +1,4 @@
-import { RestAPI } from "@webpack/common";
+import { RestAPI, GuildStore } from "@webpack/common";
 import { replaceEmojis, sleep } from "../utils/helpers";
 import { checkGuildExistence } from "../utils/api";
 import { updateWithTime } from "../utils/notifications";
@@ -8,7 +8,7 @@ import { CloneContext } from "./types";
 
 export async function cloneChannels(ctx: CloneContext): Promise<number> {
     let channelsFailed = 0;
-    const { sourceGuild, fullGuildData, newGuildId, options, estimateChannels, channelIdMap, roleIdMap, taskQueue, channelsProgressStart, channelsProgressEnd } = ctx;
+    const { sourceGuild, fullGuildData, newGuildId, options, estimateChannels, channelIdMap, roleIdMap, taskQueue, channelQueue, channelsProgressStart, channelsProgressEnd } = ctx;
 
     const allChannels = estimateChannels;
 
@@ -68,7 +68,7 @@ export async function cloneChannels(ctx: CloneContext): Promise<number> {
                 if (mappedOverwrites.length > 0) catPayload.permission_overwrites = mappedOverwrites;
             }
 
-            const response = await taskQueue.execute(async () => {
+            const response = await channelQueue.execute(async () => {
                 return await RestAPI.post({ url: `/guilds/${newGuildId}/channels`, body: catPayload });
             }, (msg) => updateWithTime(msg, (channelsProgressStart + ((catStored / Math.max(categoriesToCreate.length, 1)) * ((channelsProgressEnd - channelsProgressStart) * 0.2)))));
 
@@ -114,7 +114,7 @@ export async function cloneChannels(ctx: CloneContext): Promise<number> {
                 if (sourceRulesChannel.parent_id && channelIdMap[sourceRulesChannel.parent_id]) {
                     rulesPayload.parent_id = channelIdMap[sourceRulesChannel.parent_id];
                 }
-                const r1 = await taskQueue.execute(() => RestAPI.post({ url: `/guilds/${newGuildId}/channels`, body: rulesPayload })) as any;
+                const r1 = await channelQueue.execute(() => RestAPI.post({ url: `/guilds/${newGuildId}/channels`, body: rulesPayload })) as any;
                 if (r1?.body?.id) {
                     rulesChannelNewId = r1.body.id;
                     channelIdMap[sourceRulesChannel.id] = r1.body.id;
@@ -131,7 +131,7 @@ export async function cloneChannels(ctx: CloneContext): Promise<number> {
                 if (sourceUpdatesChannel.parent_id && channelIdMap[sourceUpdatesChannel.parent_id]) {
                     updatesPayload.parent_id = channelIdMap[sourceUpdatesChannel.parent_id];
                 }
-                const r2 = await taskQueue.execute(() => RestAPI.post({ url: `/guilds/${newGuildId}/channels`, body: updatesPayload })) as any;
+                const r2 = await channelQueue.execute(() => RestAPI.post({ url: `/guilds/${newGuildId}/channels`, body: updatesPayload })) as any;
                 if (r2?.body?.id) {
                     updatesChannelNewId = r2.body.id;
                     channelIdMap[sourceUpdatesChannel.id] = r2.body.id;
@@ -139,11 +139,11 @@ export async function cloneChannels(ctx: CloneContext): Promise<number> {
             }
 
             if (!rulesChannelNewId) {
-                const fallback = await taskQueue.execute(() => RestAPI.post({ url: `/guilds/${newGuildId}/channels`, body: { name: "rules", type: 0 } })) as any;
+                const fallback = await channelQueue.execute(() => RestAPI.post({ url: `/guilds/${newGuildId}/channels`, body: { name: "rules", type: 0 } })) as any;
                 rulesChannelNewId = fallback?.body?.id || null;
             }
             if (!updatesChannelNewId) {
-                const fallback = await taskQueue.execute(() => RestAPI.post({ url: `/guilds/${newGuildId}/channels`, body: { name: "updates", type: 0 } })) as any;
+                const fallback = await channelQueue.execute(() => RestAPI.post({ url: `/guilds/${newGuildId}/channels`, body: { name: "updates", type: 0 } })) as any;
                 updatesChannelNewId = fallback?.body?.id || null;
             }
 
@@ -158,7 +158,7 @@ export async function cloneChannels(ctx: CloneContext): Promise<number> {
                         explicit_content_filter: 2
                     }
                 });
-                await sleep(1500);
+                await sleep(500);
             }
         } catch (e) {
             console.warn("[ServerCloner] Failed to enable community:", e);
@@ -269,7 +269,7 @@ export async function cloneChannels(ctx: CloneContext): Promise<number> {
                 if (mappedOverwrites.length > 0) chPayload.permission_overwrites = mappedOverwrites;
             }
 
-            const response = await taskQueue.execute(async () => {
+            const response = await channelQueue.execute(async () => {
                 return await RestAPI.post({ url: `/guilds/${newGuildId}/channels`, body: chPayload });
             }, (msg) => updateWithTime(msg, channelsProgressStart + ((channelsProgressEnd - channelsProgressStart) * 0.2) + ((chStored / Math.max(remainingChannels.length, 1)) * ((channelsProgressEnd - channelsProgressStart) * 0.8))));
 

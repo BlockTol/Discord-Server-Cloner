@@ -1,4 +1,4 @@
-export const PLUGIN_VERSION = "3.0.0";
+export const PLUGIN_VERSION = "3.1.0";
 export const GITHUB_REPO = "BlockTol/Discord-Server-Cloner";
 export const UPDATE_CHECK_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
 export const GITHUB_RELEASE_URL = `https://github.com/${GITHUB_REPO}/releases/latest`;

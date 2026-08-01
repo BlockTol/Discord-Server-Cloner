@@ -1,5 +1,5 @@
 import { React, GuildStore, GuildRoleStore, UserStore, SearchableSelect, Checkbox, Button } from "@webpack/common";
-import { ModalContent, ModalFooter, ModalHeader, ModalProps, ModalRoot } from "@utils/modal";
+import { ModalContent, ModalFooter, ModalHeader, ModalProps, ModalRoot, openModal } from "@utils/modal";
 import { Guild } from "@vencord/discord-types";
 import { CloneOptions } from "../types";
 import { extractChannels } from "../utils/api";
@@ -202,28 +202,20 @@ export const CloneModal = ({
 
     const nothingSelected = !cloneChannels && !cloneRoles && !cloneOnboarding && !cloneSystemFlags && !cloneStickers && !cloneSoundboard;
 
-    const estimatedTime = React.useMemo(() => {
+    const itemSummaryStr = React.useMemo(() => {
         const roleCount     = cloneRoles    ? (GuildRoleStore.getSortedRoles(guild.id) || []).filter((r: any) => r.name !== "@everyone").length : 0;
         const channelCount  = cloneChannels ? extractChannels(guild.id, true).length : 0;
-        const onboardingEst = cloneOnboarding ? 2 : 0;
         const stickerEst    = cloneStickers ? sourceStickersCount : 0;
         const soundboardEst = cloneSoundboard ? sourceSoundsCount : 0;
 
-        const perItemDelay = 1.5;
-        const setupTime    = 5;
-        const deleteTime   = (targetGuildId && !resumeMode)
-            ? (channelCount * 1.2 + roleCount * 1.2 + stickerEst * 1.0 + soundboardEst * 1.0)
-            : 0;
+        const parts: string[] = [];
+        if (roleCount > 0) parts.push(`${roleCount} roles`);
+        if (channelCount > 0) parts.push(`${channelCount} channels`);
+        if (stickerEst > 0) parts.push(`${stickerEst} stickers`);
+        if (soundboardEst > 0) parts.push(`${soundboardEst} sounds`);
 
-        const totalSeconds = setupTime + deleteTime
-            + (roleCount + channelCount + onboardingEst + stickerEst + soundboardEst) * perItemDelay;
-
-        if (totalSeconds < 60) return `~${Math.ceil(totalSeconds)}s`;
-        const mins = Math.floor(totalSeconds / 60);
-        const secs = Math.ceil(totalSeconds % 60);
-        return secs > 0 ? `~${mins}m ${secs}s` : `~${mins}m`;
-
-    }, [guild.id, cloneRoles, cloneChannels, cloneOnboarding, cloneStickers, cloneSoundboard, sourceStickersCount, sourceSoundsCount, targetGuildId, resumeMode]);
+        return parts.length > 0 ? parts.join(", ") : "None";
+    }, [guild.id, cloneRoles, cloneChannels, cloneStickers, cloneSoundboard, sourceStickersCount, sourceSoundsCount]);
 
     const handleTargetChange = React.useCallback((v: string) => {
         setTargetGuildId(v === "new" ? null : v);
@@ -412,7 +404,7 @@ export const CloneModal = ({
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%" }}>
                     {!nothingSelected && (
                         <div className="sc-modal-estimate-box">
-                            <span>Estimated time: <strong>{estimatedTime}</strong></span>
+                            <span>Selected items: <strong>{itemSummaryStr}</strong></span>
                         </div>
                     )}
 
